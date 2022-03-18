@@ -64,8 +64,8 @@ public class UrlHelpController {
         return resultMap;
     }
 
-    @RequestMapping(value = {"/irs-request-body/build"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public Map<String, Object> buildIrsUrl(@RequestBody IrsBuildParamRequest request) {
+    @RequestMapping(value = {"/irs-refresh-token-url/build"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public Map<String, Object> buildIrsRefreshTokenUrl(@RequestBody IrsBuildParamRequest request) {
         Map<String, Object> resultMap = new LinkedHashMap<>();
         String appKey = request.getAppKey();
         String appSecret = request.getAppSecret();
@@ -73,6 +73,46 @@ public class UrlHelpController {
         if (requestTime == null)
             requestTime = Long.valueOf(System.currentTimeMillis());
         String sign = buildIrsSign(appKey, appSecret, requestTime);
+        resultMap.put(IRS_PARAM_NAME_APP_KEY, appKey);
+        resultMap.put(IRS_PARAM_NAME_REQUEST_TIME, requestTime);
+        resultMap.put(IRS_PARAM_NAME_SIGN, sign);
+        String url = buildIrsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getParamUri());
+        resultMap.put("getUrl", url);
+        String postUrl = buildPostCurl(url);
+        resultMap.put("curlStr", postUrl);
+        System.out.println(postUrl);
+        return resultMap;
+    }
+
+    @RequestMapping(value = {"/irs-url/build"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public Map<String, Object> buildIrsUrl(@RequestBody IrsBuildParamRequest request) {
+        Map<String, Object> resultMap = new LinkedHashMap<>();
+        String appKey = request.getAppKey();
+        String requestSecret = request.getRequestSecret();
+        Long requestTime = request.getRequestTime();
+        if (requestTime == null)
+            requestTime = Long.valueOf(System.currentTimeMillis());
+        String sign = buildIrsSign(appKey, requestSecret, requestTime);
+        resultMap.put(IRS_PARAM_NAME_APP_KEY, appKey);
+        resultMap.put(IRS_PARAM_NAME_REQUEST_TIME, requestTime);
+        resultMap.put(IRS_PARAM_NAME_SIGN, sign);
+        String url = buildIrsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getParamUri());
+        resultMap.put("getUrl", url);
+        resultMap.put("curlStr",buildPostCurl(url));
+        String postUrl = buildPostCurl(url);
+        resultMap.put("curlStr", postUrl);
+        System.out.println(postUrl);
+        return resultMap;
+    }
+
+    @RequestMapping(value = {"/irs-request-body/build"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public Map<String, Object> buildIrsRequestBody(@RequestBody IrsBuildParamRequest request) {
+        String appKey = request.getAppKey();
+        String requestSecret = request.getRequestSecret();
+        Long requestTime = request.getRequestTime();
+        if (requestTime == null)
+            requestTime = Long.valueOf(System.currentTimeMillis());
+        String sign = buildIrsSign(appKey, requestSecret, requestTime);
         Map<String, Object> requestBody = buildIrsRequestBody(appKey, requestTime, sign, request.getBizParams());
         return requestBody;
     }
@@ -128,7 +168,7 @@ public class UrlHelpController {
         log.info("***** build YS sign *****");
         log.info("{}={}", YS_PARAM_NAME_APP_KEY, appKey);
         log.info("{}={}", YS_PARAM_NAME_REQUEST_TIME, requestTime);
-        log.info("{}={}", YS_PARAM_NAME_REQUEST_SECRET, requestSecret);
+        log.info("secret={}", requestSecret);
         String str = appKey + requestSecret + requestTime;
         log.info("signStr={}", str);
         String sign = DigestUtils.md5DigestAsHex(str.getBytes(StandardCharsets.UTF_8)).toLowerCase();
@@ -160,15 +200,48 @@ public class UrlHelpController {
      * @author zhou.wu
      * @date 2022/3/17
      * */
-    public String buildIrsSign(String appKey, String appSecret, Long requestTime) {
+    public String buildIrsSign(String appKey, String secret, Long requestTime) {
         log.info("***** build IRS sign *****");
         log.info("{}={}", IRS_PARAM_NAME_APP_KEY, appKey);
-        log.info("{}={}", IRS_PARAM_NAME_APP_SECRET, appSecret);
+        log.info("secret={}", secret);
         log.info("{}={}", IRS_PARAM_NAME_REQUEST_TIME, requestTime);
-        String str = appKey + appSecret + requestTime;
+        String str = appKey + secret + requestTime;
         log.info("signStr={}", str);
         String sign = DigestUtils.md5DigestAsHex(str.getBytes(StandardCharsets.UTF_8)).toLowerCase();
         return sign;
+    }
+
+    /**
+     * 构建IRS URL
+     * @author zhou.wu
+     * @date 2022/3/17
+     * */
+    public String buildIrsUrl(String requestUrl, String appKey, Long requestTime, String sign, String paramUri) {
+        log.info("***** build YS url *****");
+        log.info("requestUrl={}", requestUrl);
+        log.info("{}={}", IRS_PARAM_NAME_APP_KEY, appKey);
+        log.info("{}={}", IRS_PARAM_NAME_REQUEST_TIME, requestTime);
+        log.info("{}={}", IRS_PARAM_NAME_SIGN, sign);
+        log.info("paramUri={}", paramUri);
+        StringBuffer getUrl = new StringBuffer((requestUrl == null) ? "" : requestUrl);
+        getUrl.append("?").append(buildOneParamUri(YS_PARAM_NAME_REQUEST_TIME, String.valueOf(requestTime)))
+                .append(splitStr()).append(buildOneParamUri(YS_PARAM_NAME_APP_KEY, appKey))
+                .append(splitStr()).append(buildOneParamUri(YS_PARAM_NAME_SIGN, sign))
+                .append((paramUri == null) ? "" : paramUri);
+        return getUrl.toString();
+    }
+
+    /**
+     * 构建POST URL
+     * @author zhou.wu
+     * @date 2022/3/17
+     * */
+    public String buildPostCurl(String url) {
+        log.info("***** build post curl *****");
+        log.info("url={}", url);
+        StringBuffer postUrl = new StringBuffer("curl -X POST ");
+        postUrl.append(url);
+        return postUrl.toString();
     }
 
     /**

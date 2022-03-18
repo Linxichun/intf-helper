@@ -9,13 +9,27 @@ import java.util.Map;
  **/
 public class IrsBuildParamRequest {
 
+    private String requestUrl;
+
     private Long requestTime;
 
     private String appKey;
 
     private String appSecret;
 
+    private String requestSecret;
+
+    private String paramUri;
+
     private Map<String, Object> bizParams;
+
+    public String getRequestUrl() {
+        return requestUrl;
+    }
+
+    public void setRequestUrl(String requestUrl) {
+        this.requestUrl = requestUrl;
+    }
 
     public Long getRequestTime() {
         return this.requestTime;
@@ -39,6 +53,22 @@ public class IrsBuildParamRequest {
 
     public void setAppSecret(String appSecret) {
         this.appSecret = appSecret;
+    }
+
+    public String getRequestSecret() {
+        return requestSecret;
+    }
+
+    public void setRequestSecret(String requestSecret) {
+        this.requestSecret = requestSecret;
+    }
+
+    public String getParamUri() {
+        return paramUri;
+    }
+
+    public void setParamUri(String paramUri) {
+        this.paramUri = paramUri;
     }
 
     public Map<String, Object> getBizParams() {

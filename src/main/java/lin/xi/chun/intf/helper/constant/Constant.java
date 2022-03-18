@@ -10,16 +10,12 @@ public class Constant {
     /* YS */
     public static final String YS_PARAM_NAME_APP_KEY = "appKey";
 
-    public static final String YS_PARAM_NAME_REQUEST_SECRET = "requestSecret";
-
     public static final String YS_PARAM_NAME_REQUEST_TIME = "requestTime";
 
     public static final String YS_PARAM_NAME_SIGN = "sign";
 
     /* IRS */
     public static final String IRS_PARAM_NAME_APP_KEY = "appKey";
-
-    public static final String IRS_PARAM_NAME_APP_SECRET = "appSecret";
 
     public static final String IRS_PARAM_NAME_REQUEST_TIME = "requestTime";
 
