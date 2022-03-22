@@ -15,7 +15,7 @@ public class YsBuildParamRequest {
 
     private String requestSecret;
 
-    private String paramUri;
+    private String otherUri;
 
     public Long getRequestTime() {
         return this.requestTime;
@@ -49,11 +49,11 @@ public class YsBuildParamRequest {
         this.requestSecret = requestSecret;
     }
 
-    public String getParamUri() {
-        return this.paramUri;
+    public String getOtherUri() {
+        return this.otherUri;
     }
 
-    public void setParamUri(String paramUri) {
-        this.paramUri = paramUri;
+    public void setOtherUri(String otherUri) {
+        this.otherUri = otherUri;
     }
 }

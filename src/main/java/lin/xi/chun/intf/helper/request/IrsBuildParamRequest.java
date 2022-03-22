@@ -19,7 +19,7 @@ public class IrsBuildParamRequest {
 
     private String requestSecret;
 
-    private String paramUri;
+    private String otherUri;
 
     private Map<String, Object> bizParams;
 
@@ -63,12 +63,12 @@ public class IrsBuildParamRequest {
         this.requestSecret = requestSecret;
     }
 
-    public String getParamUri() {
-        return paramUri;
+    public String getOtherUri() {
+        return otherUri;
     }
 
-    public void setParamUri(String paramUri) {
-        this.paramUri = paramUri;
+    public void setOtherUri(String otherUri) {
+        this.otherUri = otherUri;
     }
 
     public Map<String, Object> getBizParams() {

@@ -5,7 +5,6 @@ import lin.xi.chun.intf.helper.request.IrsBuildParamRequest;
 import lin.xi.chun.intf.helper.request.YsBuildParamRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,9 +31,6 @@ public class UrlHelpController {
 
     private static final Logger log = LoggerFactory.getLogger(UrlHelpController.class);
 
-    @Value("${os.type:windows}")
-    private String osType;
-
     @RequestMapping(value = {"/ys-url"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String getYsUrl(@RequestBody YsBuildParamRequest request) {
         String appKey = request.getAppKey();
@@ -43,7 +39,7 @@ public class UrlHelpController {
         if (requestTime == null)
             requestTime = Long.valueOf(System.currentTimeMillis());
         String sign = buildYsSign(appKey, requestTime, requestSecret);
-        String url = buildYsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getParamUri());
+        String url = buildYsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getOtherUri());
         return url;
     }
 
@@ -59,8 +55,11 @@ public class UrlHelpController {
         resultMap.put(YS_PARAM_NAME_REQUEST_TIME, requestTime);
         String sign = buildYsSign(appKey, requestTime, requestSecret);
         resultMap.put(YS_PARAM_NAME_SIGN, sign);
-        String url = buildYsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getParamUri());
+        String url = buildYsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getOtherUri());
         resultMap.put("getUrl", url);
+        String postUrl = buildPostCurl(url);
+        resultMap.put("curlStr", postUrl);
+        System.out.println(postUrl);
         return resultMap;
     }
 
@@ -76,7 +75,7 @@ public class UrlHelpController {
         resultMap.put(IRS_PARAM_NAME_APP_KEY, appKey);
         resultMap.put(IRS_PARAM_NAME_REQUEST_TIME, requestTime);
         resultMap.put(IRS_PARAM_NAME_SIGN, sign);
-        String url = buildIrsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getParamUri());
+        String url = buildIrsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getOtherUri());
         resultMap.put("getUrl", url);
         String postUrl = buildPostCurl(url);
         resultMap.put("curlStr", postUrl);
@@ -96,7 +95,7 @@ public class UrlHelpController {
         resultMap.put(IRS_PARAM_NAME_APP_KEY, appKey);
         resultMap.put(IRS_PARAM_NAME_REQUEST_TIME, requestTime);
         resultMap.put(IRS_PARAM_NAME_SIGN, sign);
-        String url = buildIrsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getParamUri());
+        String url = buildIrsUrl(request.getRequestUrl(), appKey, requestTime, sign, request.getOtherUri());
         resultMap.put("getUrl", url);
         resultMap.put("curlStr",buildPostCurl(url));
         String postUrl = buildPostCurl(url);
@@ -150,13 +149,7 @@ public class UrlHelpController {
      * @date 2022/3/17
      * */
     private String splitStr() {
-        String str = "&";
-        switch (this.osType) {
-            case "linux":
-                str = "\\&";
-                break;
-        }
-        return str;
+        return "&";
     }
 
     /**
@@ -180,18 +173,18 @@ public class UrlHelpController {
      * @author zhou.wu
      * @date 2022/3/17
      * */
-    public String buildYsUrl(String requestUrl, String appKey, Long requestTime, String sign, String paramUri) {
+    public String buildYsUrl(String requestUrl, String appKey, Long requestTime, String sign, String otherUri) {
         log.info("***** build YS url *****");
         log.info("requestUrl={}", requestUrl);
         log.info("{}={}", YS_PARAM_NAME_APP_KEY, appKey);
         log.info("{}={}", YS_PARAM_NAME_REQUEST_TIME, requestTime);
         log.info("{}={}", YS_PARAM_NAME_SIGN, sign);
-        log.info("paramUri={}", paramUri);
+        log.info("otherUri={}", otherUri);
         StringBuffer getUrl = new StringBuffer((requestUrl == null) ? "" : requestUrl);
         getUrl.append("?").append(buildOneParamUri(YS_PARAM_NAME_REQUEST_TIME, String.valueOf(requestTime)))
                 .append(splitStr()).append(buildOneParamUri(YS_PARAM_NAME_APP_KEY, appKey))
                 .append(splitStr()).append(buildOneParamUri(YS_PARAM_NAME_SIGN, sign))
-                .append((paramUri == null) ? "" : paramUri);
+                .append((otherUri == null) ? "" : otherUri);
         return getUrl.toString();
     }
 
@@ -216,18 +209,18 @@ public class UrlHelpController {
      * @author zhou.wu
      * @date 2022/3/17
      * */
-    public String buildIrsUrl(String requestUrl, String appKey, Long requestTime, String sign, String paramUri) {
-        log.info("***** build YS url *****");
+    public String buildIrsUrl(String requestUrl, String appKey, Long requestTime, String sign, String otherUri) {
+        log.info("***** build IRS url *****");
         log.info("requestUrl={}", requestUrl);
         log.info("{}={}", IRS_PARAM_NAME_APP_KEY, appKey);
         log.info("{}={}", IRS_PARAM_NAME_REQUEST_TIME, requestTime);
         log.info("{}={}", IRS_PARAM_NAME_SIGN, sign);
-        log.info("paramUri={}", paramUri);
+        log.info("otherUri={}", otherUri);
         StringBuffer getUrl = new StringBuffer((requestUrl == null) ? "" : requestUrl);
         getUrl.append("?").append(buildOneParamUri(YS_PARAM_NAME_REQUEST_TIME, String.valueOf(requestTime)))
                 .append(splitStr()).append(buildOneParamUri(YS_PARAM_NAME_APP_KEY, appKey))
                 .append(splitStr()).append(buildOneParamUri(YS_PARAM_NAME_SIGN, sign))
-                .append((paramUri == null) ? "" : paramUri);
+                .append((otherUri == null) ? "" : otherUri);
         return getUrl.toString();
     }
 
@@ -240,7 +233,7 @@ public class UrlHelpController {
         log.info("***** build post curl *****");
         log.info("url={}", url);
         StringBuffer postUrl = new StringBuffer("curl -X POST ");
-        postUrl.append(url);
+        postUrl.append("'").append(url).append("'");
         return postUrl.toString();
     }
 
